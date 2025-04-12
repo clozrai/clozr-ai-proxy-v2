@@ -55,6 +55,7 @@ wss.on("connection", async function connection(clientSocket) {
   });
 
   dgSocket.on("transcriptReceived", (data) => {
+    console.log("🎧 Raw data from Deepgram:", data);
     const transcript = JSON.parse(data);
     if (
       transcript.channel &&
