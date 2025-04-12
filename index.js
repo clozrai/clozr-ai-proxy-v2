@@ -35,8 +35,8 @@ wss.on("connection", async function connection(clientSocket) {
     console.log("🧠 Connected to Deepgram");
 
     clientSocket.on("message", (message) => {
-      console.log(`📩 Received audio from browser: ${message.byteLength} bytes`);
       if (dgSocket.getReadyState() === 1) {
+      console.log(`📩 Received audio from browser: ${message.byteLength} bytes`);
         dgSocket.send(message);
         console.log(`📤 Forwarded audio to Deepgram: ${message.byteLength} bytes`);
       }
@@ -69,7 +69,7 @@ wss.on("connection", async function connection(clientSocket) {
   });
 
   dgSocket.on("error", (error) => {
-    console.error("❌ Deepgram error:", error);
+    console.error("❌ Deepgram Websocket error:", error);
   });
 
   dgSocket.on("close", () => {
