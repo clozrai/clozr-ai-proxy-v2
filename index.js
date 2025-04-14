@@ -21,11 +21,16 @@ const DG_API_KEY = process.env.DEEPGRAM_API_KEY;
 const deepgram = createClient(DG_API_KEY);
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve test.html
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => res.send("CLOZR AI Proxy Running ✅"));
 
-wss.on("connection", async function connection(clientSocket) {
+// Explicit route for test.html
+app.get("/test.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "test.html"));
+});
+
+wss.on("connection", async (clientSocket) => {
   console.log("🔗 New WebSocket connection");
 
   let dgSocket;
@@ -39,9 +44,7 @@ wss.on("connection", async function connection(clientSocket) {
       interim_results: false,
     });
 
-    dgSocket.on("open", () => {
-      console.log("🧠 Connected to Deepgram");
-    });
+    dgSocket.on("open", () => console.log("🧠 Connected to Deepgram"));
 
     dgSocket.on("transcriptReceived", (data) => {
       const transcript = JSON.parse(data);
@@ -56,28 +59,27 @@ wss.on("connection", async function connection(clientSocket) {
       }
     });
 
-    dgSocket.on("error", (error) => {
-      console.error("❌ Deepgram error:", error);
-    });
-
-    dgSocket.on("close", () => {
-      console.log("🔁 Deepgram socket closed");
-    });
+    dgSocket.on("error", (err) => console.error("❌ Deepgram error:", err));
+    dgSocket.on("close", () => console.log("🔁 Deepgram socket closed"));
   }
 
   clientSocket.on("message", (message) => {
     console.log(`📩 Received audio from browser: ${message.byteLength} bytes`);
 
     if (USE_MOCK_DEEPGRAM) {
-      const objections = ["too expensive", "not interested", "think about it", "call me back"];
+      const objections = [
+        "too expensive",
+        "not interested",
+        "think about it",
+        "call me back",
+      ];
       if (Math.random() > 0.95) {
         const fake = objections[Math.floor(Math.random() * objections.length)];
-        const response = { transcript: fake };
-        clientSocket.send(JSON.stringify(response));
+        clientSocket.send(JSON.stringify({ transcript: fake }));
         console.log("🧪 Sent mock transcript:", fake);
       }
     } else {
-      if (dgSocket.getReadyState() === 1) {
+      if (dgSocket && dgSocket.getReadyState() === 1) {
         dgSocket.send(message);
         console.log(`📤 Forwarded audio to Deepgram: ${message.byteLength} bytes`);
       }
